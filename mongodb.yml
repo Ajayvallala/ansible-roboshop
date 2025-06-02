@@ -1,5 +1,5 @@
 - name: Mongodb Configuration
-  hosts: Mongodb
+  hosts: mongodb
   become: yes
   tasks:
   - name: Creating Mongodb repo
