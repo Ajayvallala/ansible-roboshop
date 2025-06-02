@@ -52,7 +52,7 @@
     ansible.builtin.service:
      name: catalogue
      state: started
-     enable: yes
+     enabled: yes
 
   - name: Creating Mongodb repo
     ansible.builtin.copy:
@@ -66,4 +66,4 @@
 
   - name: Load data to mongodb-mongosh
     ansible.builtin.shell: "mongosh --host mongodb.vallalas.store </app/db/master-data.js"
-    
+
