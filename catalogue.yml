@@ -21,7 +21,9 @@
   - name: Create system user
     ansible.builtin.user:
      name: roboshop
+     shell: /sbin/nologin
      system: true
+     home: /app
 
   - name: Download the code
     ansible.builtin.get_url:
@@ -64,6 +66,11 @@
      name: mongodb-mongosh
      state: present 
 
-  - name: Load data to mongodb-mongosh
-    ansible.builtin.shell: "mongosh --host mongodb.vallalas.store </app/db/master-data.js"
+  - name: Check if data is already loaded or not
+    ansible.builtin.shell: mongosh --host mongodb.vallalas.store --eval 'db.getMongo().getDBNames().indexOf("catalogue")'
+    register: db_output
+
+  - name: Load the data
+    ansible.builtin.shell: mongosh --host mongodb.vallalas.store < /app/db/master-data.js
+    when: db_output.stdout | int < 0
 

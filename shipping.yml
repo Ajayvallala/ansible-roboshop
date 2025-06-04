@@ -1,0 +1,80 @@
+- name: Configuring shipping service
+  hosts: shipping
+  become: true
+  tasks:
+  - name: Installing maven
+    ansible.builtin.dnf:
+     name: maven
+     state: present
+  
+  - name: Create a App directory 
+    ansible.builtin.file:
+     path: /app
+     state: directory
+
+  - name: Create system user
+    ansible.builtin.user:
+     name: roboshop
+     shell: /sbin/nologin
+     system: true
+     home: /app
+
+  - name: Download the code
+    ansible.builtin.get_url:
+     url: https://roboshop-artifacts.s3.amazonaws.com/shipping-v3.zip
+     dest: /tmp/shipping.zip
+
+  - name: Unzipping the zip file
+    ansible.builtin.unarchive:
+     src: /tmp/shipping.zip
+     dest: /app
+     remote_src: yes
+
+  - name: Installing dependencies 
+    ansible.builtin.command: mvn clean package.json
+    args:
+     chdir: /app
+
+  - name: Renaming jar file
+    ansible.builtin.command: mv target/shipping-1.0.jar shipping.jar 
+    args:
+     chdir: /app
+ 
+  - name: Creating Catalogue service
+    ansible.builtin.copy:
+     src: shipping.service
+     dest: /etc/systemd/system/shipping.service
+
+  - name: systemd reload
+    ansible.builtin.systemd_service:
+     daemon_reload: true
+
+  - name: starting shipping service
+    ansible.builtin.service:
+     name: shipping
+     state: started
+     enabled: yes
+
+  - name: Creating Mongodb repo
+    ansible.builtin.copy:
+     src: mongodb.repo
+     dest: /etc/yum.repos.d/mongodb.repo
+
+  - name: Installing mysql-client
+    ansible.builtin.dnf:
+     name: mysql
+     state: started
+
+  - name: Creating schema
+    ansible.builtin.shell: mysql -h <MYSQL-SERVER-IPADDRESS> -uroot -pRoboShop@1 < /app/db/schema.sql
+
+  - name: creating user
+    ansible.builtin.shell: mysql -h <MYSQL-SERVER-IPADDRESS> -uroot -pRoboShop@1 < /app/db/app-user.sql 
+
+  - name: Loading the data
+    ansible.builtin.shell: mysql -h <MYSQL-SERVER-IPADDRESS> -uroot -pRoboShop@1 < /app/db/master-data.sql
+
+  - name: Shipping service restarted
+    ansible.builtin.service:
+     name: shipping
+     state: restarted
