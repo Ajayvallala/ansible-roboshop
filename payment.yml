@@ -36,9 +36,8 @@
 
   - name: Installing dependencies 
     ansible.builtin.pip:
-     requirements: requirements.txt
-     args:
-      chdir: /app
+     requirements: /app/requirements.txt
+
 
   - name: Creating payment service
     ansible.builtin.copy:
