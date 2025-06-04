@@ -63,7 +63,7 @@
   - name: Installing mysql-client
     ansible.builtin.dnf:
      name: mysql
-     state: started
+     state: present
 
   - name: Creating schema
     ansible.builtin.shell: mysql -h mysql.vallalas.store -uroot -pRoboShop@1 < /app/db/schema.sql
